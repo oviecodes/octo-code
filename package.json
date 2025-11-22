@@ -22,6 +22,7 @@
     "@langchain/cohere": "^1.0.0",
     "@langchain/core": "^1.0.6",
     "@langchain/mistralai": "^1.0.0",
+    "@langchain/textsplitters": "^1.0.0",
     "@types/js-yaml": "^4.0.9",
     "enquirer": "^2.4.1",
     "ignore": "^7.0.5",

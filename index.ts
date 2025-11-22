@@ -21,6 +21,7 @@ const config = userConfigs.getUserConfigs()
   // index codebase
   const initialize = new Init(config)
   await initialize.readFiles()
+  await initialize.chunkFiles()
 
   // start shell
   const shell = new Cli(config)

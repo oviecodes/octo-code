@@ -2,6 +2,8 @@ import { readdir, stat, readFile } from "node:fs/promises"
 import { join, relative, extname } from "node:path"
 import ignore from "ignore"
 import { defaultSkipPatterns, supportedExtensions } from "./constants"
+import FileSplitter from "../agent/fileSplitter"
+import { FileInfo } from "../common/types"
 
 /**
  * readfiles in cwd()
@@ -10,18 +12,13 @@ import { defaultSkipPatterns, supportedExtensions } from "./constants"
  * store chunks in vectorDB
  */
 
-interface FileInfo {
-  path: string
-  relativePath: string
-  content: string
-}
-
 export class Init {
   config: Record<string, any>
   files: FileInfo[]
   gitignore: ignore.Ignore | null
   defaultSkipPatterns: string[]
   maxFileSize: number // in bytes (default 1MB)
+  chunks: any
 
   constructor(config: Record<string, any>) {
     this.config = config
@@ -202,9 +199,19 @@ export class Init {
     }
   }
 
-  chunkFiles() {}
+  async chunkFiles() {
+    // new chunk(this.files)
+    const fileSplitter = new FileSplitter(this.files)
+    const splittingStrategies = fileSplitter.createStrategies()
+
+    console.log("returned", splittingStrategies)
+
+    // return each file with it's own chunking strategy
+  }
 
   embedChunks() {}
 
-  store() {}
+  store() {
+    const configs = this.embedChunks()
+  }
 }
