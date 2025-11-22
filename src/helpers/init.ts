@@ -1,6 +1,7 @@
 import { readdir, stat, readFile } from "node:fs/promises"
 import { join, relative, extname } from "node:path"
 import ignore from "ignore"
+import { defaultSkipPatterns, supportedExtensions } from "./constants"
 
 /**
  * readfiles in cwd()
@@ -27,52 +28,7 @@ export class Init {
     this.files = []
     this.gitignore = null
     this.maxFileSize = 1024 * 1024 // 1MB default
-    this.defaultSkipPatterns = [
-      // Build artifacts
-      "node_modules",
-      "dist",
-      "build",
-      ".next",
-      ".nuxt",
-      ".output",
-      "out",
-      ".cache",
-      ".turbo",
-      // Dependencies
-      ".venv",
-      "venv",
-      "__pycache__",
-      ".pytest_cache",
-      ".mypy_cache",
-      // Version control
-      ".git",
-      ".svn",
-      ".hg",
-      // Environment and config
-      ".env",
-      ".env.*",
-      "octo.yaml",
-      "octo.yml",
-      "config.yaml",
-      "config.yml",
-      // Lock files
-      "package-lock.json",
-      "yarn.lock",
-      "pnpm-lock.yaml",
-      "poetry.lock",
-      // Logs
-      "*.log",
-      "logs",
-      // OS files
-      ".DS_Store",
-      "Thumbs.db",
-      // IDE
-      ".vscode",
-      ".idea",
-      "*.swp",
-      "*.swo",
-      "*~",
-    ]
+    this.defaultSkipPatterns = defaultSkipPatterns
   }
 
   /**
@@ -151,50 +107,8 @@ export class Init {
     const ext = extname(filePath).toLowerCase()
 
     // Get user-defined extensions from config, or use defaults
-    const includeExtensions = this.config.data?.include_extensions || [
-      ".ts",
-      ".tsx",
-      ".js",
-      ".jsx",
-      ".py",
-      ".java",
-      ".go",
-      ".rs",
-      ".cpp",
-      ".c",
-      ".h",
-      ".hpp",
-      ".cs",
-      ".rb",
-      ".php",
-      ".swift",
-      ".kt",
-      ".scala",
-      ".md",
-      ".mdx",
-      ".txt",
-      ".json",
-      ".yaml",
-      ".yml",
-      ".toml",
-      ".ini",
-      ".cfg",
-      ".conf",
-      ".sh",
-      ".bash",
-      ".zsh",
-      ".fish",
-      ".sql",
-      ".graphql",
-      ".gql",
-      ".vue",
-      ".svelte",
-      ".html",
-      ".css",
-      ".scss",
-      ".sass",
-      ".less",
-    ]
+    const includeExtensions =
+      this.config.data?.include_extensions || supportedExtensions
 
     // If no extensions specified, include all text files
     if (includeExtensions.length === 0) {
