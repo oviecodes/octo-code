@@ -1,23 +1,32 @@
 import { prompt } from "enquirer"
+import EventEmitter from "events"
 
-export default class Cli {
+export default class Cli extends EventEmitter {
   config: Record<string, any>
 
   constructor(config: any) {
+    super()
     this.config = config
   }
 
   async startShell() {
-    console.log("Codag shell. Type 'exit' to quit.\n")
+    console.log("octo-code shell. Type 'exit' to quit.\n")
     console.log(this.config)
 
-    while (true) {
+    let shouldExit = false
+
+    while (!shouldExit) {
       try {
         const { command } = await prompt<{ command: string }>({
           type: "input",
           name: "command",
           message: "prompt: ",
         })
+
+        if (shouldExit) {
+          console.log("Goodbye!")
+          process.exit(0)
+        }
 
         const input = command.trim()
 
@@ -26,11 +35,14 @@ export default class Cli {
           process.exit(0)
         }
 
-        // Instead of echo, you can put command parsing
         console.log(`You entered: ${input}`)
-      } catch (err) {
-        console.log("Shell exited.")
-        process.exit(0)
+      } catch (err: any) {
+        if (err?.code === "ERR_USE_AFTER_CLOSE" || shouldExit) {
+          console.log("\nShutting down gracefully...")
+          console.log("Goodbye!")
+          process.exit(0)
+        }
+        throw err
       }
     }
   }

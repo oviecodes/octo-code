@@ -3,3 +3,5 @@ dist
 .env
 config.yaml
 config.yml
+octo.yaml
+octo.yml

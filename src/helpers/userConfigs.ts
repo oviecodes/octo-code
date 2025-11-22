@@ -1,7 +1,7 @@
 import fs from "fs"
 import yaml from "js-yaml"
 /**
- * codag.yml - "MODEL_API_KEY", "MODEL", "EMBED_API_KEY", PROCESS
+ * octo.yml - "MODEL_API_KEY", "MODEL", "EMBED_API_KEY", PROCESS
  * agents.md
  */
 
@@ -15,7 +15,7 @@ class UserConfigs {
   }
 
   getUserConfigs() {
-    this.readFileSyncWithFallback(["config.yml", "config.yaml"])
+    this.readFileSyncWithFallback(["octo.yml", "octo.yaml"])
     if (this.configs == null) {
       console.log("falling back to default config")
       return this.fetchDefaultConfigs()
