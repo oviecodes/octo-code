@@ -6,12 +6,11 @@ import yaml from "js-yaml"
  */
 
 class UserConfigs {
-  cwd: string
-  configs: Record<string, any> | null
+  configs: Record<string, any>
 
   constructor() {
-    this.cwd = process.cwd()
-    this.configs = null
+    this.configs = {}
+    this.configs.cwd = process.cwd()
   }
 
   getUserConfigs() {
@@ -30,7 +29,7 @@ class UserConfigs {
         const fileContents = fs.readFileSync(file, "utf8")
         const data: any = yaml.load(fileContents)
 
-        this.configs = data
+        this.configs.data = data
       } catch (e: any) {
         if (e.code === "ENOENT") {
           console.log("cannot find config file at", e.path)

@@ -10,7 +10,7 @@ export default class Cli extends EventEmitter {
   }
 
   async startShell() {
-    console.log("octo-code shell. Type 'exit' to quit.\n")
+    console.log("OCTO shell. Type 'exit' to quit.\n")
     console.log(this.config)
 
     let shouldExit = false
@@ -24,22 +24,22 @@ export default class Cli extends EventEmitter {
         })
 
         if (shouldExit) {
-          console.log("Goodbye!")
+          console.log("\nQuitting OCTO...")
           process.exit(0)
         }
 
         const input = command.trim()
 
         if (input === "exit") {
-          console.log("Goodbye!")
+          console.log("\nQuitting OCTO...")
           process.exit(0)
         }
 
         console.log(`You entered: ${input}`)
       } catch (err: any) {
-        if (err?.code === "ERR_USE_AFTER_CLOSE" || shouldExit) {
-          console.log("\nShutting down gracefully...")
-          console.log("Goodbye!")
+        shouldExit = true
+        if (shouldExit) {
+          console.log("\nQuitting OCTO...")
           process.exit(0)
         }
         throw err

@@ -1,20 +1,37 @@
-// readfiles in cwd()
-// chunk files
-// embed chunks
-// store chunks in vectorDB
+import { readdir } from "node:fs/promises"
 
-export class init {
-  cwd: string
-  db: string
-  embedAPIKey: string
+/**
+ * readfiles in cwd()
+ * chunk files
+ * embed chunks
+ * store chunks in vectorDB
+ */
 
-  constructor(cwd: string, db: string, embedAPIKEY: string) {
-    this.cwd = cwd
-    this.db = db
-    this.embedAPIKey = embedAPIKEY
+export class Init {
+  config: Record<string, any>
+  directories: string[]
+  files: string[]
+  skipList: string[]
+
+  constructor(config: Record<string, any>) {
+    this.config = config
+    this.directories = []
+    this.files = []
+    this.skipList = [".env", "octo.yaml", "octo.yml", "*.json"]
   }
 
-  readFiles() {}
+  async readFiles() {
+    try {
+      this.directories = await readdir(`${this.config.cwd}/src`)
+      for (const dir of this.directories) {
+        // check file stat
+        // if it's a folder, reject
+        console.log(`\n${dir}`)
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
 
   chunkFiles() {}
 

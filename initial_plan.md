@@ -1,6 +1,6 @@
 ### Thinking - Phase 1:
 
-1. CLI - enter command into CLI (codag)
+1. CLI - enter command into CLI (OCTO code)
 2. Read & parse codebase in pwd()
 3. chunk, embed & store in vector store
 
