@@ -15,9 +15,16 @@ class UserConfigs {
 
   getUserConfigs() {
     this.readFileSyncWithFallback(["octo.yml", "octo.yaml"])
-    if (this.configs == null) {
+
+    // Ensure cwd is always set
+    if (!this.configs.cwd) {
+      this.configs.cwd = process.cwd()
+    }
+
+    // If no data was loaded, use defaults
+    if (!this.configs.data) {
       console.log("falling back to default config")
-      return this.fetchDefaultConfigs()
+      this.configs.data = this.fetchDefaultConfigs()
     }
 
     return this.configs
