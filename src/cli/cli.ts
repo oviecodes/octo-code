@@ -11,7 +11,6 @@ export default class Cli extends EventEmitter {
 
   async startShell() {
     console.log("OCTO shell. Type 'exit' to quit.\n")
-    console.log(this.config)
 
     let shouldExit = false
 

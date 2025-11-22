@@ -4,6 +4,7 @@ import ignore from "ignore"
 import { defaultSkipPatterns, supportedExtensions } from "./constants"
 import FileSplitter from "../agent/fileSplitter"
 import { FileInfo } from "../common/types"
+import EmbedCodebase from "../agent/embed"
 
 /**
  * readfiles in cwd()
@@ -19,6 +20,7 @@ export class Init {
   defaultSkipPatterns: string[]
   maxFileSize: number // in bytes (default 1MB)
   chunks: any
+  embeddings: any
 
   constructor(config: Record<string, any>) {
     this.config = config
@@ -199,19 +201,21 @@ export class Init {
     }
   }
 
+  /**
+   * Chunk files in codebase
+   */
   async chunkFiles() {
-    // new chunk(this.files)
-    const fileSplitter = new FileSplitter(this.files)
-    const splittingStrategies = fileSplitter.createStrategies()
-
-    console.log("returned", splittingStrategies)
-
-    // return each file with it's own chunking strategy
+    this.chunks = new FileSplitter(this.files)
+      .createStrategies()
+      ?.getFilesWithChunkingStrategy()
   }
 
-  embedChunks() {}
-
-  store() {
-    const configs = this.embedChunks()
+  /**
+   * Create chunk embeddings
+   */
+  embedChunks() {
+    this.embeddings = new EmbedCodebase(this.config).getEmbeddings()
   }
+
+  store() {}
 }

@@ -24,10 +24,12 @@
     "@langchain/mistralai": "^1.0.0",
     "@langchain/textsplitters": "^1.0.0",
     "@types/js-yaml": "^4.0.9",
+    "dotenv": "^17.2.3",
     "enquirer": "^2.4.1",
     "ignore": "^7.0.5",
     "js-yaml": "^4.1.1",
-    "langchain": "^1.0.6"
+    "langchain": "^1.0.6",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

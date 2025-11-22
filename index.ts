@@ -1,7 +1,6 @@
 import Cli from "./src/cli/cli"
 import userConfigs from "./src/helpers/userConfigs"
 import { Init } from "./src/helpers/init"
-import { exit } from "process"
 
 process.on("unhandledRejection", (reason: any) => {
   if (reason && typeof reason === "object" && "code" in reason) {
@@ -22,6 +21,7 @@ const config = userConfigs.getUserConfigs()
   const initialize = new Init(config)
   await initialize.readFiles()
   await initialize.chunkFiles()
+  initialize.embedChunks()
 
   // start shell
   const shell = new Cli(config)
