@@ -1,14 +1,19 @@
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters"
-import { FileInfo } from "../common/types"
+import {
+  FileInfo,
+  ProcessedFile,
+  LanguageExtension,
+  Language,
+  ChunkSizeConfig,
+} from "../common/types"
 import path from "path"
-import { v4 } from "uuid"
 
 class FileSplitter {
   files: FileInfo[]
-  chunks: any = []
-  strategies: any = {}
+  chunks: ProcessedFile[] = []
+  strategies: Partial<Record<Language, RecursiveCharacterTextSplitter>> = {}
 
-  languageExt: any = {
+  languageExt: Record<string, Language> = {
     ".js": "js",
     ".ts": "js",
     ".py": "python",
@@ -16,7 +21,7 @@ class FileSplitter {
     ".html": "html",
   }
 
-  chunkSizeConfig = {
+  chunkSizeConfig: Partial<Record<string, ChunkSizeConfig>> = {
     /**
      * .json, .yaml, .yml, .toml, .ini, .cfg, .conf - { chunkSize: 500 - 1000, overlap: 50-10 }
      *
@@ -33,21 +38,22 @@ class FileSplitter {
       chunkSize: 1000,
       chunkOverlap: 200,
     },
-    ".sql": {},
   }
 
   constructor(files: FileInfo[]) {
     this.files = files
   }
 
-  getFilesWithChunkingStrategy() {
+  getFilesWithChunkingStrategy(): ProcessedFile[] {
     return this.chunks
   }
 
-  createStrategies() {
-    for (let file of this.files) {
+  createStrategies(): this {
+    console.log("files length", this.files.length)
+    for (const file of this.files) {
       try {
-        const language = this.languageExt[path.extname(file.relativePath)]
+        const ext = path.extname(file.relativePath) as LanguageExtension
+        const language = this.languageExt[ext]
         if (!language) continue
 
         if (!this.strategies[language]) {
@@ -59,23 +65,24 @@ class FileSplitter {
         }
 
         this.chunks.push({
-          id: v4(),
+          chunks: [],
           metadata: {
             filePath: file.path,
             relativePath: file.relativePath,
+            fileExtension: path.extname(file.relativePath),
             language,
           },
-          text: file.content,
+          content: file.content,
           lastModified: new Date(),
-          embedding: [],
           splitter: this.strategies[language],
         })
-      } catch (e: any) {
-        console.log("error occured", e)
+      } catch (e: unknown) {
+        const error = e as Error
+        console.log("error occured", error)
       }
-
-      return this
     }
+
+    return this
   }
 }
 

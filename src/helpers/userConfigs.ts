@@ -1,19 +1,22 @@
 import fs from "fs"
 import yaml from "js-yaml"
+import { UserConfig } from "../common/types"
+
 /**
  * octo.yml - "MODEL_API_KEY", "MODEL", "EMBED_API_KEY", PROCESS
  * agents.md
  */
 
 class UserConfigs {
-  configs: Record<string, any>
+  configs: UserConfig
 
   constructor() {
-    this.configs = {}
-    this.configs.cwd = process.cwd()
+    this.configs = {
+      cwd: process.cwd(),
+    }
   }
 
-  getUserConfigs() {
+  getUserConfigs(): UserConfig {
     this.readFileSyncWithFallback(["octo.yml", "octo.yaml"])
 
     // Ensure cwd is always set
@@ -30,23 +33,24 @@ class UserConfigs {
     return this.configs
   }
 
-  readFileSyncWithFallback(userConfigFileOpts: string[]) {
-    for (let file of userConfigFileOpts) {
+  readFileSyncWithFallback(userConfigFileOpts: string[]): void {
+    for (const file of userConfigFileOpts) {
       try {
         const fileContents = fs.readFileSync(file, "utf8")
-        const data: any = yaml.load(fileContents)
+        const data = yaml.load(fileContents) as UserConfig["data"]
 
         this.configs.data = data
-      } catch (e: any) {
-        if (e.code === "ENOENT") {
-          console.log("cannot find config file at", e.path)
+      } catch (e: unknown) {
+        const error = e as NodeJS.ErrnoException
+        if (error.code === "ENOENT") {
+          console.log("cannot find config file at", error.path)
           continue
         }
       }
     }
   }
 
-  fetchDefaultConfigs() {
+  fetchDefaultConfigs(): UserConfig["data"] {
     return {
       MODEL_API_KEY: "",
       MODEL: "",

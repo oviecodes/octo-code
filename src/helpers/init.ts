@@ -1,10 +1,17 @@
 import { readdir, stat, readFile } from "node:fs/promises"
-import { join, relative, extname } from "node:path"
+import path, { join, relative, extname } from "node:path"
 import ignore from "ignore"
 import { defaultSkipPatterns, supportedExtensions } from "./constants"
 import FileSplitter from "../agent/fileSplitter"
-import { FileInfo } from "../common/types"
+import {
+  FileInfo,
+  UserConfig,
+  EmbeddingConfig,
+  ProcessedFile,
+} from "../common/types"
 import EmbedCodebase from "../agent/embed"
+import Store from "../agent/store"
+import { writeFile } from "node:fs/promises"
 
 /**
  * readfiles in cwd()
@@ -14,15 +21,16 @@ import EmbedCodebase from "../agent/embed"
  */
 
 export class Init {
-  config: Record<string, any>
+  config: UserConfig
   files: FileInfo[]
   gitignore: ignore.Ignore | null
   defaultSkipPatterns: string[]
   maxFileSize: number // in bytes (default 1MB)
-  chunks: any
-  embeddings: any
+  processedFiles: ProcessedFile[] | undefined
+  embeddings: EmbeddingConfig | undefined
+  vectorStore: Store | undefined
 
-  constructor(config: Record<string, any>) {
+  constructor(config: UserConfig) {
     this.config = config
     this.files = []
     this.gitignore = null
@@ -39,9 +47,10 @@ export class Init {
     try {
       const gitignoreContent = await readFile(gitignorePath, "utf-8")
       this.gitignore = ignore().add(gitignoreContent)
-    } catch (err: any) {
-      if (err.code !== "ENOENT") {
-        console.warn(`Warning: Could not read .gitignore: ${err.message}`)
+    } catch (err: unknown) {
+      const error = err as NodeJS.ErrnoException
+      if (error.code !== "ENOENT") {
+        console.warn(`Warning: Could not read .gitignore: ${error.message}`)
       }
       // If no .gitignore, create empty ignore instance
       this.gitignore = ignore()
@@ -179,24 +188,26 @@ export class Init {
                 relativePath: relativePath,
                 content: content,
               })
-            } catch (readErr: any) {
+            } catch (readErr: unknown) {
               // Skip binary files or files that can't be read as UTF-8
-              if (readErr.code === "EISDIR" || readErr.code === "EACCES") {
+              const error = readErr as NodeJS.ErrnoException
+              if (error.code === "EISDIR" || error.code === "EACCES") {
                 continue
               }
               console.warn(
-                `Could not read file ${relativePath}: ${readErr.message}`
+                `Could not read file ${relativePath}: ${error.message}`
               )
             }
-          } catch (statErr) {
+          } catch (statErr: unknown) {
             console.warn(`Could not stat file ${relativePath}`)
             continue
           }
         }
       }
-    } catch (err: any) {
-      if (err.code !== "EACCES" && err.code !== "ENOENT") {
-        console.error(`Error reading directory ${dirPath}: ${err.message}`)
+    } catch (err: unknown) {
+      const error = err as NodeJS.ErrnoException
+      if (error.code !== "EACCES" && error.code !== "ENOENT") {
+        console.error(`Error reading directory ${dirPath}: ${error.message}`)
       }
     }
   }
@@ -204,8 +215,8 @@ export class Init {
   /**
    * Chunk files in codebase
    */
-  async chunkFiles() {
-    this.chunks = new FileSplitter(this.files)
+  async chunkFiles(): Promise<void> {
+    this.processedFiles = new FileSplitter(this.files)
       .createStrategies()
       ?.getFilesWithChunkingStrategy()
   }
@@ -213,9 +224,38 @@ export class Init {
   /**
    * Create chunk embeddings
    */
-  embedChunks() {
+  setEmbeddings(): void {
     this.embeddings = new EmbedCodebase(this.config).getEmbeddings()
   }
 
-  store() {}
+  /**
+   * Store embeddings
+   */
+  async store(): Promise<void> {
+    try {
+      this.setEmbeddings()
+      if (!this.embeddings) {
+        throw new Error("Failed to initialize embeddings")
+      }
+      this.vectorStore = new Store(this.embeddings, this.config)
+      this.vectorStore.setStore()
+
+      if (!this.processedFiles) {
+        throw new Error("No processed files available")
+      }
+
+      for (const file of this.processedFiles) {
+        file.chunks = await file.splitter.splitText(file.content)
+        await this.vectorStore.insertChunk(file)
+      }
+
+      await writeFile(
+        path.join(process.cwd(), "output.json"),
+        JSON.stringify(this.vectorStore.allEmbeddingPrep, null, 2)
+      )
+    } catch (e: unknown) {
+      const error = e as Error
+      console.log("splitting error", error)
+    }
+  }
 }

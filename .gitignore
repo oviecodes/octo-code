@@ -6,3 +6,5 @@ config.yml
 octo.yaml
 octo.yml
 example.txt
+docker-compose.yaml
+output.json

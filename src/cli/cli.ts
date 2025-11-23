@@ -1,15 +1,16 @@
 import { prompt } from "enquirer"
 import EventEmitter from "events"
+import { UserConfig } from "../common/types"
 
 export default class Cli extends EventEmitter {
-  config: Record<string, any>
+  config: UserConfig
 
-  constructor(config: any) {
+  constructor(config: UserConfig) {
     super()
     this.config = config
   }
 
-  async startShell() {
+  async startShell(): Promise<void> {
     console.log("OCTO shell. Type 'exit' to quit.\n")
 
     let shouldExit = false
@@ -35,7 +36,7 @@ export default class Cli extends EventEmitter {
         }
 
         console.log(`You entered: ${input}`)
-      } catch (err: any) {
+      } catch (err: unknown) {
         shouldExit = true
         if (shouldExit) {
           console.log("\nQuitting OCTO...")
